@@ -65,7 +65,6 @@ void TIM1_UP_IRQHandler(void);
 void TIM1_TRG_COM_IRQHandler(void);
 void LPUART1_IRQHandler(void);
 void RTC_Alarm_IRQHandler(void);
-void SUBGHZ_Radio_IRQHandler(void);
 /* USER CODE BEGIN EFP */
 
 /* USER CODE END EFP */

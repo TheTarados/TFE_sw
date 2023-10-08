@@ -53,12 +53,11 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-int change_SF(void);
-int change_power(void);
-void blink_led(int blinknumber);
-void debug_print(const char* out);
 void start_cycle_count();
 void stop_cycle_count(char *s);
+void print_now(char*);
+void print_int(int);
+void print_error(char*, int);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
@@ -87,28 +86,6 @@ void stop_cycle_count(char *s);
 /* USER CODE BEGIN Private defines */
 #define VERBOSE					1
 
-// RTC must not be at 1 if SEND_SYNC_PACKETS is set (the receiver doesn't sense)
-#define RTC_FETCH_SEND_BME		0
-#define RTC_DELAY				12000	// must be enough so that there is no packet collision with other senders
-
-// The sync packets are sent by the future receiver to trigger the RTC of the sensors
-#define SEND_SYNC_PACKETS		1	// So it is the receiver
-#define RECV_SYNC_PACKETS		0	// So it is the sensor/emitter
-
-// Button 1 - Sweep either power or SF
-#define CHANGESF 				0		// Sweep between SF7 -> SF12
-#define CHANGETXPOWER			1		// Sweep between -5 -> 14 dBm
-#define BTN1ACTION				CHANGESF
-
-// Button 2 - Either send or receive mode, with other features (RTC start, sync packets)
-#define SENDPACKET				0
-#define RECEIVEPACKET			1
-#define RXTIMEOUT				180000
-#define BTN2ACTION				RECEIVEPACKET
-
-void print_now(char*);
-void print_int(int);
-void print_error(char*, int);
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

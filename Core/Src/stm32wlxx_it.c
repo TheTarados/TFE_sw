@@ -59,7 +59,6 @@ extern DMA_HandleTypeDef hdma_adc;
 extern DMA_HandleTypeDef hdma_lpuart1_tx;
 extern UART_HandleTypeDef hlpuart1;
 extern RTC_HandleTypeDef hrtc;
-extern SUBGHZ_HandleTypeDef hsubghz;
 extern TIM_HandleTypeDef htim1;
 /* USER CODE BEGIN EV */
 
@@ -190,6 +189,7 @@ void SysTick_Handler(void)
   /* USER CODE BEGIN SysTick_IRQn 0 */
 
   /* USER CODE END SysTick_IRQn 0 */
+  HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
 
   /* USER CODE END SysTick_IRQn 1 */
@@ -340,20 +340,6 @@ void RTC_Alarm_IRQHandler(void)
   /* USER CODE BEGIN RTC_Alarm_IRQn 1 */
 
   /* USER CODE END RTC_Alarm_IRQn 1 */
-}
-
-/**
-  * @brief This function handles SUBGHZ Radio Interrupt.
-  */
-void SUBGHZ_Radio_IRQHandler(void)
-{
-  /* USER CODE BEGIN SUBGHZ_Radio_IRQn 0 */
-
-  /* USER CODE END SUBGHZ_Radio_IRQn 0 */
-  HAL_SUBGHZ_IRQHandler(&hsubghz);
-  /* USER CODE BEGIN SUBGHZ_Radio_IRQn 1 */
-
-  /* USER CODE END SUBGHZ_Radio_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

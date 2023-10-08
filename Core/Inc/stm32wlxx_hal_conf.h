@@ -53,7 +53,7 @@
 /*#define HAL_SMARTCARD_MODULE_ENABLED   */
 /*#define HAL_SMBUS_MODULE_ENABLED   */
 #define HAL_SPI_MODULE_ENABLED
-#define HAL_SUBGHZ_MODULE_ENABLED
+/*#define HAL_SUBGHZ_MODULE_ENABLED   */
 #define HAL_TIM_MODULE_ENABLED
 #define HAL_UART_MODULE_ENABLED
 /*#define HAL_USART_MODULE_ENABLED   */
@@ -159,7 +159,7 @@
   * @brief This is the HAL system configuration section
   */
 #define  VDD_VALUE                          1800U                             /*!< Value of VDD in mv */
-#define  TICK_INT_PRIORITY                  ((1uL <<__NVIC_PRIO_BITS) - 1uL)  /*!< tick interrupt priority (lowest by default) */
+#define  TICK_INT_PRIORITY                  0U
 #define  USE_RTOS                           0U
 #define  PREFETCH_ENABLE                    0U
 #define  INSTRUCTION_CACHE_ENABLE           1U

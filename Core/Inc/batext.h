@@ -9,7 +9,6 @@
 #define INC_BATEXT_H_
 
 #include "main.h"
-#include "sys_app.h"
 
 #define ADC_BUF_SIZE	12000
 

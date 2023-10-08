@@ -23,7 +23,6 @@
 #include "app_fatfs.h"
 #include "usart.h"
 #include "spi.h"
-#include "app_subghz_phy.h"
 #include "tim.h"
 #include "gpio.h"
 
@@ -31,9 +30,6 @@
 /* USER CODE BEGIN Includes */
 #include <stdlib.h>
 #include "string.h"
-#include "radio.h"
-#include "sys_app.h"
-#include "subghz_phy_app.h"
 #include "rtc.h"
 #include "batext.h"
 /* USER CODE END Includes */
@@ -56,9 +52,6 @@
 
 /* USER CODE BEGIN PV */
 
-struct bme68x_data *bme_data;
-int currentTxPower = TX_OUTPUT_POWER;
-int currentSF = LORA_SPREADING_FACTOR;
 
 int timertogglenumber;
 
@@ -105,7 +98,6 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_LPUART1_UART_Init();
-  MX_SubGHz_Phy_Init();
   MX_ADC_Init();
   MX_TIM1_Init();
   MX_SPI1_Init();
@@ -125,9 +117,8 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-    MX_SubGHz_Phy_Process();
-
     /* USER CODE BEGIN 3 */
+	  __WFI();
   }
   /* USER CODE END 3 */
 }
@@ -185,7 +176,9 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 void print_now(char* string){
+#if(VERBOSE)
 	HAL_UART_Transmit(&hlpuart1, (uint8_t *)string, strlen(string), 0xFFFF);
+#endif
 }
 
 int intbuffer[20]; //Consider we won't have more than 20 digits
@@ -241,14 +234,6 @@ void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc)
 {
 
 	print_now("RTC Wake up !\r\n");
-}
-
-
-void debug_print(const char* out)
-{
-#if(VERBOSE)
-	APP_PRINTF(out);
-#endif
 }
 
 volatile uint8_t counting_cycles = 0;

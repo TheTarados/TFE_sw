@@ -119,11 +119,11 @@ void HAL_RTC_MspInit(RTC_HandleTypeDef* rtcHandle)
     __HAL_RCC_RTCAPB_CLK_ENABLE();
 
     /* RTC interrupt Init */
-    HAL_NVIC_SetPriority(TAMP_STAMP_LSECSS_SSRU_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(TAMP_STAMP_LSECSS_SSRU_IRQn, 1, 0);
     HAL_NVIC_EnableIRQ(TAMP_STAMP_LSECSS_SSRU_IRQn);
-    HAL_NVIC_SetPriority(RTC_WKUP_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(RTC_WKUP_IRQn, 1, 0);
     HAL_NVIC_EnableIRQ(RTC_WKUP_IRQn);
-    HAL_NVIC_SetPriority(RTC_Alarm_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(RTC_Alarm_IRQn, 1, 0);
     HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
   /* USER CODE BEGIN RTC_MspInit 1 */
 
@@ -159,7 +159,7 @@ void myRTC_start(int timems)
 	if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, (uint32_t)(timems*2048/1000), RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK) {
 	    Error_Handler();
 	  }
-	debug_print("myRTC start\r\n");
+	print_now("myRTC start\r\n");
 }
 
 void myRTC_stop()
@@ -167,6 +167,6 @@ void myRTC_stop()
 	if (HAL_RTCEx_DeactivateWakeUpTimer(&hrtc)) {
 		Error_Handler();
 	}
-	debug_print("myRTC stop\r\n");
+	print_now("myRTC stop\r\n");
 }
 /* USER CODE END 1 */

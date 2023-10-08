@@ -26,7 +26,6 @@
 
 /* USER CODE BEGIN Includes */
 #include "main.h" // for debug_print
-#include "my_packet.h" // for decode_print_packet
 /* USER CODE END Includes */
 
 /* External variables ---------------------------------------------------------*/
@@ -256,8 +255,7 @@ static void OnTxDone(void)
 static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t LoraSnr_FskCfo)
 {
   /* USER CODE BEGIN OnRxDone */
-	//debug_print("Rx done callback\r\n");
-	decode_print_packet(payload, size, rssi, LoraSnr_FskCfo);
+	debug_print("Rx done callback\r\n");
   /* USER CODE END OnRxDone */
 }
 

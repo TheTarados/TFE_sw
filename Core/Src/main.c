@@ -35,7 +35,6 @@
 #include "sys_app.h"
 #include "subghz_phy_app.h"
 #include "rtc.h"
-#include "my_packet.h"
 #include "batext.h"
 /* USER CODE END Includes */
 
@@ -240,39 +239,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc)
 {
-#if(RTC_FETCH_SEND_BME && !SEND_SYNC_PACKETS)
+
 	print_now("RTC Wake up !\r\n");
-	change_SF(); // ONLY FOR SNR EXPERIENCE !!!!!!!!!!
-	bme_data = get_BME_data();
-	make_packet(bme_data);
-	send_packet();
-	blink_led(1);
-#elif(SEND_SYNC_PACKETS && !RTC_FETCH_SEND_BME)
-	send_sync_packet();
-#endif
-}
-
-
-int change_SF()
-{
-	if(++currentSF > 12) {
-		currentSF = 7;
-	}
-	SubghzApp_SetLoRaConfig(currentTxPower, currentSF);
-#if(SEND_SYNC_PACKETS)
-    print_error("Radio in RX mode for %ds...\n", RXTIMEOUT/1000);
-	Radio.Rx(RXTIMEOUT);
-#endif
-	return currentSF;
-}
-
-int change_power()
-{
-	if(++currentTxPower > 14) {
-		currentTxPower = -5;
-	}
-	SubghzApp_SetLoRaConfig(currentTxPower, currentSF);
-	return currentTxPower;
 }
 
 
@@ -282,9 +250,6 @@ void debug_print(const char* out)
 	APP_PRINTF(out);
 #endif
 }
-
-
-
 
 volatile uint8_t counting_cycles = 0;
 

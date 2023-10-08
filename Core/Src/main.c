@@ -21,7 +21,6 @@
 #include "adc.h"
 #include "dma.h"
 #include "app_fatfs.h"
-#include "i2c.h"
 #include "usart.h"
 #include "spi.h"
 #include "app_subghz_phy.h"
@@ -32,7 +31,6 @@
 /* USER CODE BEGIN Includes */
 #include <stdlib.h>
 #include "string.h"
-#include "my_sensor.h"
 #include "radio.h"
 #include "sys_app.h"
 #include "subghz_phy_app.h"
@@ -107,7 +105,6 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_I2C1_Init();
   MX_LPUART1_UART_Init();
   MX_SubGHz_Phy_Init();
   MX_ADC_Init();
@@ -192,9 +189,9 @@ void print_now(char* string){
 	HAL_UART_Transmit(&hlpuart1, (uint8_t *)string, strlen(string), 0xFFFF);
 }
 
-int intbuffer[20]; //Considere we won't have more than 20 digits
-char charbuffer[2] = {'c', '\0'};
+int intbuffer[20]; //Consider we won't have more than 20 digits
 void print_int(int my_int){
+#if(VERBOSE)
 	int k = 0;
 	while(my_int>0){
 		char temp = my_int%10+48;
@@ -202,16 +199,17 @@ void print_int(int my_int){
 		k++;
 		my_int /= 10;
 	}
-	print_now("\r\n");
 	for(int j = k-1; j >=0; j-=1 ){
-		charbuffer[0]= intbuffer[j];
-		print_now(charbuffer);
+		print_now((char*)(intbuffer+j));
 	}
 	print_now("\r\n");
+#endif
 }
 void print_error(char* string, int my_int){
+#if(VERBOSE)
 	print_now(string);
 	print_int(my_int);
+#endif
 }
 
 void blink(int time_ms){
@@ -230,12 +228,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		batext_power_on();
 		blink(500);
 	} else if (GPIO_Pin == Button2_Pin) {
-		debug_print("Button 2\r\n");
-		debug_print("Shutting down\r\n");
+		print_now("Button 2\r\n");
+		print_now("Shutting down\r\n");
 		batext_power_off();
 		blink(500);
 	} else {
-		debug_print("other?\r\n");
+		print_now("other?\r\n");
 	}
 }
 
@@ -243,7 +241,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc)
 {
 #if(RTC_FETCH_SEND_BME && !SEND_SYNC_PACKETS)
-	debug_print("RTC Wake up !\r\n");
+	print_now("RTC Wake up !\r\n");
 	change_SF(); // ONLY FOR SNR EXPERIENCE !!!!!!!!!!
 	bme_data = get_BME_data();
 	make_packet(bme_data);
@@ -262,7 +260,7 @@ int change_SF()
 	}
 	SubghzApp_SetLoRaConfig(currentTxPower, currentSF);
 #if(SEND_SYNC_PACKETS)
-	APP_PRINTF("Radio in RX mode for %ds...\r\n", RXTIMEOUT/1000);
+    print_error("Radio in RX mode for %ds...\n", RXTIMEOUT/1000);
 	Radio.Rx(RXTIMEOUT);
 #endif
 	return currentSF;
@@ -294,7 +292,7 @@ void start_cycle_count() {
 	uint32_t prim = __get_PRIMASK();
 	__disable_irq();
 	if (counting_cycles) {
-		APP_PRINTF("Tried re-entrant cycle counting.\r\n");
+		print_now("Tried re-entrant cycle counting.\r\n");
 		Error_Handler();
 	} else {
 		counting_cycles = 1;

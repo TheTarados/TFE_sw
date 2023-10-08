@@ -20,7 +20,6 @@
 
 
 #include "bme68x_defs.h"
-#include "my_sensor.h"
 
 #define SENDER_ID					1	// on one bytes : 0 to 255
 

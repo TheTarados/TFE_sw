@@ -1,0 +1,12 @@
+../Core/Src/batext.c:25:6:batext_power_on	3
+../Core/Src/batext.c:48:6:batext_power_off	1
+../Core/Src/batext.c:69:6:batext_AFE_init	3
+../Core/Src/batext.c:85:6:batext_AFE_deinit	3
+../Core/Src/batext.c:100:6:batext_choose_gain	1
+../Core/Src/batext.c:106:13:ADC_Callback	2
+../Core/Src/batext.c:123:6:HAL_ADC_ConvCpltCallback	1
+../Core/Src/batext.c:128:6:HAL_ADC_ConvHalfCpltCallback	1
+../Core/Src/batext.c:140:5:batext_is_card_inserted	1
+../Core/Src/batext.c:146:6:batext_SD_init	3
+../Core/Src/batext.c:170:6:batext_SD_deinit	1
+../Core/Src/batext.c:179:5:batext_SD_write	4

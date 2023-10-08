@@ -105,6 +105,10 @@ void stop_cycle_count(char *s);
 #define RECEIVEPACKET			1
 #define RXTIMEOUT				180000
 #define BTN2ACTION				RECEIVEPACKET
+
+void print_now(char*);
+void print_int(int);
+void print_error(char*, int);
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

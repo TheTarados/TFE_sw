@@ -24,15 +24,15 @@ FRESULT fres; //Result after operation
 
 void batext_power_on(void)
 {
-	APP_PRINTF("Begin power on\r\n");
+	print_now("Begin power on\r\n");
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
-	debug_print("BatExt power ON\r\n");
+	print_now("BatExt power ON\r\n");
 	HAL_Delay(100); // for card insert cap charge
 	if(!batext_is_card_inserted()) {
-		debug_print("Error while powering on : No card inserted\r\n");
+		print_now("Error while powering on : No card inserted\r\n");
 		return;
 	} else {
-		debug_print("Success : Card is inserted\r\n");
+		print_now("Success : Card is inserted\r\n");
 	}
 	batext_SD_init();
 	HAL_Delay(1000); // more delays between steps may be required at initialisation otherwise it sometimes fails
@@ -40,9 +40,9 @@ void batext_power_on(void)
 	batext_choose_gain(3);
 
 	HAL_Delay(100);
-	fres = f_open(&fil, "TEST", FA_WRITE | FA_OPEN_APPEND);
+	fres = f_open(&fil, "MYTEST", FA_WRITE | FA_OPEN_APPEND);
 	if(fres != FR_OK) {
-		APP_PRINTF("f_open error (%i)\r\n", fres);
+		print_error("f_open error\n", fres);
 	}
 }
 void batext_power_off(void)
@@ -50,7 +50,7 @@ void batext_power_off(void)
 	batext_AFE_deinit();
 	batext_SD_deinit();
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-	debug_print("BatExt power OFF\r\n");
+	print_now("BatExt power OFF\r\n");
 }
 
 
@@ -73,11 +73,11 @@ void batext_AFE_init(void)
 		Error_Handler();
 	}*/
 	if (HAL_TIM_Base_Start(&htim1) != HAL_OK) {
-		debug_print("Error while enabling timer TIM1\r\n");
+		print_now("Error while enabling timer TIM1\r\n");
 		Error_Handler();
 	}
 	if (HAL_ADC_Start_DMA(&hadc, (uint32_t *)ADCDoubleBuf, 2*ADC_BUF_SIZE) != HAL_OK) {
-		debug_print("Error while starting the DMA\r\n");
+		print_now("Error while starting the DMA\r\n");
 		Error_Handler();
 	}
 }
@@ -85,11 +85,11 @@ void batext_AFE_init(void)
 void batext_AFE_deinit(void)
 {
 	if (HAL_ADC_Stop_DMA(&hadc) != HAL_OK) {
-		debug_print("Error while stopping the DMA\r\n");
+		print_now("Error while stopping the DMA\r\n");
 		Error_Handler();
 	}
 	if (HAL_TIM_Base_Stop(&htim1) != HAL_OK) {
-		debug_print("Error while disabling timer TIM1\r\n");
+		print_now("Error while disabling timer TIM1\r\n");
 		Error_Handler();
 	}
 }
@@ -105,16 +105,16 @@ void batext_choose_gain(uint8_t gain)
 
 static void ADC_Callback(int buf_cplt) {
 	if (ADCDataRdy[1-buf_cplt]) {
-		debug_print("Error: ADC Data buffer full\r\n");
+		print_now("Error: ADC Data buffer full\r\n");
 		Error_Handler();
 	}
 	ADCDataRdy[buf_cplt] = 1;
 
 	//APP_PRINTF("ADC Callback : buffer %d\r\n", buf_cplt);
 
-//	start_cycle_count();
+	start_cycle_count();
 	batext_SD_write((const void *) ADCData[buf_cplt], ADC_BUF_SIZE*S_SIZE); // 2 bytes per uint16
-//	stop_cycle_count("SD Write");
+	stop_cycle_count("SD Write");
 	//APP_PRINTF("Wrote %d bytes\r\n", ADC_BUF_SIZE*S_SIZE);
 
 	ADCDataRdy[buf_cplt] = 0;
@@ -149,7 +149,7 @@ void batext_SD_init(void)
 	HAL_Delay(1000); // to let time for SD to settle if just inserted
 	fres = f_mount(&FatFs, "", 1); //1=mount now
 	if (fres != FR_OK) {
-		APP_PRINTF("f_mount error (%i)\r\n", fres);
+		print_error("f_mount error\n", fres);
 		Error_Handler();
 	}
 
@@ -158,12 +158,14 @@ void batext_SD_init(void)
 	FATFS* getFreeFs;
 	fres = f_getfree("", &free_clusters, &getFreeFs);
 	if (fres != FR_OK) {
-		APP_PRINTF("f_getfree error (%i)\r\n", fres);
+		print_error("f_getfree error\n", fres);
 		Error_Handler();
 	}
 	total_sectors = (getFreeFs->n_fatent - 2) * getFreeFs->csize;
 	free_sectors = free_clusters * getFreeFs->csize;
-	APP_PRINTF("SD card stats:\r\n%u KiB total drive space.\r\n%u KiB available.\r\n", total_sectors / 2, free_sectors / 2);
+	print_now("SD card stats:\r\n");
+	print_error("KiB total drive space:\n", total_sectors / 2);
+	print_error("KiB available:\n" , free_sectors / 2);
 }
 
 
@@ -181,19 +183,19 @@ int batext_SD_write(const void *data, uint32_t size)
 	UINT written;
 	fres = f_write(&fil, data, size, &written);
 	if(fres != FR_OK) {
-		APP_PRINTF("f_write error (%i), trying to recover\r\n", fres);
+		print_error("f_write error, trying to recover\n", fres);
 		batext_SD_deinit();
 		batext_SD_init();
 		HAL_Delay(1000);
 		fres = f_open(&fil, "TEST", FA_WRITE | FA_OPEN_APPEND);
 		if(fres != FR_OK) {
-			APP_PRINTF("f_open error (%i)\r\n", fres);
+			print_error("f_open error\n", fres);
 		}
 		fres = f_write(&fil, data, size, &written); //If we still fail, it seems dead
 		return fres;
 	}
 	if(written != size) {
-		APP_PRINTF("f_write error : did not write all the bytes\r\n");
+		print_now("f_write error : did not write all the bytes\r\n");
 	}
 	return FR_OK;
 }

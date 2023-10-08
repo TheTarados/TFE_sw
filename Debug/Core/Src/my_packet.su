@@ -1,5 +1,0 @@
-../Core/Src/my_packet.c:24:6:make_packet	16	static
-../Core/Src/my_packet.c:56:6:send_packet	16	static
-../Core/Src/my_packet.c:64:6:send_dummy_packet	8	static
-../Core/Src/my_packet.c:73:6:send_sync_packet	16	static
-../Core/Src/my_packet.c:92:6:decode_print_packet	96	static

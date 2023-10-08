@@ -117,7 +117,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   // Print banner and blink LED //
-  debug_print("\n\nBonjourre Brock !\n\r\n");
+  print_now("\n\nBonjourre Brock !\n\r\n");
 
   // Init BME680 sensor with or without selftest //
   //my_sensor_init(&hi2c1, 0);
@@ -188,7 +188,31 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void print_now(char* string){
+	HAL_UART_Transmit(&hlpuart1, (uint8_t *)string, strlen(string), 0xFFFF);
+}
 
+int intbuffer[20]; //Considere we won't have more than 20 digits
+char charbuffer[2] = {'c', '\0'};
+void print_int(int my_int){
+	int k = 0;
+	while(my_int>0){
+		char temp = my_int%10+48;
+		intbuffer[k]=temp;
+		k++;
+		my_int /= 10;
+	}
+	print_now("\r\n");
+	for(int j = k-1; j >=0; j-=1 ){
+		charbuffer[0]= intbuffer[j];
+		print_now(charbuffer);
+	}
+	print_now("\r\n");
+}
+void print_error(char* string, int my_int){
+	print_now(string);
+	print_int(my_int);
+}
 
 void blink(int time_ms){
 
@@ -202,7 +226,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	//debug_print("GPIO EXTI callback - ");
 	if(GPIO_Pin == Button1_Pin) {
-		debug_print("Button 1\r\n");
+		print_now("Button 1\r\n");
 		batext_power_on();
 		blink(500);
 	} else if (GPIO_Pin == Button2_Pin) {
@@ -284,9 +308,9 @@ void start_cycle_count() {
 void stop_cycle_count(char *s) {
 	uint32_t res = DWT->CYCCNT;
 	counting_cycles = 0;
-	APP_PRINTF("[PERF] ");
-	APP_PRINTF(s);
-	APP_PRINTF(" %u cycles.\r\n", res);
+	print_now("[PERF] ");
+	print_now(s);
+	print_error("Cycles: ", res);
 }
 
 

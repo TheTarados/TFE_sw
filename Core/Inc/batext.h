@@ -10,7 +10,7 @@
 
 #include "main.h"
 
-#define ADC_BUF_SIZE	12000
+#define ADC_BUF_SIZE 512
 
 void batext_power_on(void);
 void batext_power_off(void);

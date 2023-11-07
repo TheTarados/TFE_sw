@@ -7,7 +7,7 @@
 
 #include "batext.h"
 #include "app_fatfs.h"
-
+#include "spectrogram_tables.h"
 
 void batext_AFE_init(void);
 void batext_AFE_deinit(void);
@@ -103,7 +103,7 @@ void batext_choose_gain(uint8_t gain)
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, (gain & 0x02) >> 1);
 }
 
-static void ADC_Callback(int buf_cplt) {
+static void Save_Callback(int buf_cplt) {
 	if (ADCDataRdy[1-buf_cplt]) {
 		print_now("Error: ADC Data buffer full\r\n");
 		Error_Handler();
@@ -120,14 +120,45 @@ static void ADC_Callback(int buf_cplt) {
 	ADCDataRdy[buf_cplt] = 0;
 }
 
+
+q15_t buf     [ ADC_BUF_SIZE ]; // Windowed samples
+q15_t fft_buf     [ 2 * ADC_BUF_SIZE ]; // Windowed samples
+q15_t melvec [64];
+q63_t temp_vak = 0;
+static void Spec_Callback(int buf_cplt) {
+	q7_t* in = (q7_t*)ADCData[buf_cplt];
+	arm_q7_to_q15(in, buf, ADC_BUF_SIZE);
+
+	arm_mult_q15(buf, hamming_window, buf, ADC_BUF_SIZE);
+
+	arm_rfft_instance_q15 rfft_inst;
+	arm_rfft_init_q15(&rfft_inst, ADC_BUF_SIZE, 0, 1);
+
+	arm_rfft_q15( &rfft_inst, buf, fft_buf);
+	arm_shift_q15(fft_buf, 7,buf, ADC_BUF_SIZE/2);
+	arm_cmplx_mag_q15(buf, buf, ADC_BUF_SIZE/2);
+
+	for(int i = 0 ; i < 64; i++){
+		arm_dot_prod_q15(buf+s_pos[i],ls[i],l_lens[i], &temp_vak);
+		melvec[i] = (q15_t)(temp_vak>>3);
+	}
+	/*
+	arm_mat_mult_fast_q15(&hz2mel_inst, &fftmag_inst, &melvec_inst, buf);
+	*/
+	for(int i = 0 ; i < 64 ; i++){
+		print_int(melvec[i]);
+		print_now(",");
+	}
+	print_now("\r\n");
+}
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
-	ADC_Callback(1);
+	Spec_Callback(1);
 }
 
 void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef *hadc)
 {
-	ADC_Callback(0);
+	Spec_Callback(0);
 }
 
 /*******************

@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "adc.h"
+#include "crc.h"
 #include "dma.h"
 #include "app_fatfs.h"
 #include "usart.h"
@@ -28,7 +29,6 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <stdlib.h>
 #include "string.h"
 #include "rtc.h"
 #include "batext.h"
@@ -102,6 +102,7 @@ int main(void)
   MX_TIM1_Init();
   MX_SPI1_Init();
   MX_FATFS_Init();
+  MX_CRC_Init();
   /* USER CODE BEGIN 2 */
 
   // Print banner and blink LED //
@@ -114,12 +115,15 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 	  __WFI();
+	  print_now("Got out of WFI\r\n");
   }
   /* USER CODE END 3 */
 }
@@ -182,12 +186,16 @@ void print_now(char* string){
 int intbuffer[20]; //Consider we won't have more than 20 digits
 void print_int(int my_int){
 #if(VERBOSE)
-	int k = 0;
-	if (my_int == 0){
-		intbuffer[0]=48;
-		k = 1;
+	if(my_int<0){
+		print_now("-");
+		my_int = -my_int;
 	}
-	else while(my_int>0){
+	if (my_int == 0){
+		print_now("0");
+		return;
+	}
+	int k = 0;
+	while(my_int>0){
 		char temp = my_int%10+48;
 		intbuffer[k]=temp;
 		k++;
@@ -196,13 +204,13 @@ void print_int(int my_int){
 	for(int j = k-1; j >=0; j-=1 ){
 		print_now((char*)(intbuffer+j));
 	}
-	print_now("\r\n");
 #endif
 }
 void print_error(char* string, int my_int){
 #if(VERBOSE)
 	print_now(string);
 	print_int(my_int);
+	print_now("\r\n");
 #endif
 }
 

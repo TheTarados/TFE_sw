@@ -32,6 +32,7 @@
 #include "string.h"
 #include "rtc.h"
 #include "batext.h"
+#include "arm_math.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -118,6 +119,20 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	q15_t buf     [ 64 ]; // Windowed samples
+	q15_t in [32];
+	for(int i = 0 ; i < 32 ; i++){
+		in[i] = 1<<10;
+	}
+	arm_rfft_instance_q15 rfft_inst;
+	arm_rfft_init_q15(&rfft_inst, 32, 0, 1);
+
+	arm_rfft_q15( &rfft_inst, in, buf);
+	for(int i = 0 ; i < 64 ; i++){
+		print_int(buf[i]);
+		print_now(", ");
+	}
+	print_now("\r\n\n");
   }
   /* USER CODE END 3 */
 }

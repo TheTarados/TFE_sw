@@ -85,7 +85,7 @@ void print_error(char*, int);
 
 /* USER CODE BEGIN Private defines */
 #define VERBOSE					1
-
+#define LPUART_ACTIVE			1
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

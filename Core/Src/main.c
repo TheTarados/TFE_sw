@@ -107,19 +107,17 @@ int main(void)
   // Print banner and blink LED //
   print_now("\n\nBonjourre Brock !\n\r\n");
 
-  // Init BME680 sensor with or without selftest //
-  //my_sensor_init(&hi2c1, 0);
   blink(200);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  HAL_TIM_Base_Stop(&htim1);
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  __WFI();
   }
   /* USER CODE END 3 */
 }
@@ -174,7 +172,7 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 void print_now(char* string){
-#if(VERBOSE)
+#if(VERBOSE && LPUART_ACTIVE)
 	HAL_UART_Transmit(&hlpuart1, (uint8_t *)string, strlen(string), 0xFFFF);
 #endif
 }
@@ -182,12 +180,16 @@ void print_now(char* string){
 int intbuffer[20]; //Consider we won't have more than 20 digits
 void print_int(int my_int){
 #if(VERBOSE)
-	int k = 0;
-	if (my_int == 0){
-		intbuffer[0]=48;
-		k = 1;
+	if(my_int<0){
+		print_now("-");
+		my_int = -my_int;
 	}
-	else while(my_int>0){
+	if (my_int == 0){
+		print_now("0");
+		return;
+	}
+	int k = 0;
+	while(my_int>0){
 		char temp = my_int%10+48;
 		intbuffer[k]=temp;
 		k++;
@@ -196,13 +198,13 @@ void print_int(int my_int){
 	for(int j = k-1; j >=0; j-=1 ){
 		print_now((char*)(intbuffer+j));
 	}
-	print_now("\r\n");
 #endif
 }
 void print_error(char* string, int my_int){
 #if(VERBOSE)
 	print_now(string);
 	print_int(my_int);
+	print_now("\r\n");
 #endif
 }
 

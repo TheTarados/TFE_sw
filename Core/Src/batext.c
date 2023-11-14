@@ -110,7 +110,7 @@ static void ADC_Callback(int buf_cplt) {
 	}
 	ADCDataRdy[buf_cplt] = 1;
 
-	print_error("ADC Callback : buffer\n", buf_cplt);
+	//print_error("ADC Callback : buffer\n", buf_cplt);
 
 	//start_cycle_count();
 	batext_SD_write((const void *) ADCData[buf_cplt], ADC_BUF_SIZE*S_SIZE); // 2 bytes per uint16

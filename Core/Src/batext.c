@@ -160,6 +160,7 @@ static void Spec_Callback(int buf_cplt) {
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
 #if !SAVE_TO_SD
+	Spec_Callback(1);
 #else
 	Save_Callback(1);
 #endif

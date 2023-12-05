@@ -104,14 +104,25 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   // Print banner and blink LED //
-  print_now("\n\nBonjourre Brock !\n\r\n");
+  print_now("\n\nHello world!\n\r\n");
 
   blink(200);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  
+  /*char in[512];
+  for(int i = 0 ; i < 512; i++){
+	  in[i] = i/4;
+  }
+  print_now("In array\r\n");
+	for(int i = 0 ; i < 10 ; i++){
+		print_int(in[i]);
+		print_now(",");
+	}
+	print_now("\r\n\n");
+  vec_computation(in);
+  */
   while (1)
   {
     /* USER CODE END WHILE */
@@ -206,6 +217,7 @@ void print_error(char* string, int my_int){
 	print_now("\r\n");
 #endif
 }
+
 
 void blink(int time_ms){
 

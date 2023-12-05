@@ -9,15 +9,17 @@
 #define INC_BATEXT_H_
 
 #include "main.h"
+#include "arm_math.h"
 
-#define ADC_BUF_SIZE	512
-#define SAVE_TO_SD 0
+#define ADC_BUF_SIZE	27500
+#define SAVE_TO_SD 1
 
 void batext_power_on(void);
 void batext_power_off(void);
 void batext_choose_gain(uint8_t gain);
 int batext_is_card_inserted(void);
 int batext_SD_write(const void *data, uint32_t size);
+void vec_computation(q7_t* in);
 
 extern ADC_HandleTypeDef hadc;
 extern TIM_HandleTypeDef htim1;

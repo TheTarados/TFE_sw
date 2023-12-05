@@ -22,35 +22,44 @@ FATFS FatFs; 	//Fatfs handle
 FIL fil; 		//File handle
 FRESULT fres; //Result after operation
 
+int init_sd_power_on(void){
+	if(!batext_is_card_inserted()) {
+		print_now("Error while powering on : No card inserted\r\n");
+		return 1;
+	} else {
+		print_now("Success : Card is inserted\r\n");
+	}
+	batext_SD_init();
+	HAL_Delay(1000);
+	fres = f_open(&fil, "MYTEST", FA_WRITE | FA_OPEN_APPEND);
+	if(fres != FR_OK) {
+		print_error("f_open error\n", fres);
+		return 1;
+	}
+	return 0;
+}
+
 void batext_power_on(void)
 {
 	print_now("Begin power on\r\n");
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
 	print_now("BatExt power ON\r\n");
 	HAL_Delay(100); // for card insert cap charge
+
 #if SAVE_TO_SD
-	if(!batext_is_card_inserted()) {
-		print_now("Error while powering on : No card inserted\r\n");
-		return;
-	} else {
-		print_now("Success : Card is inserted\r\n");
-	}
-	batext_SD_init();
+	if(init_sd_power_on())return;
 #endif
 	HAL_Delay(1000); // more delays between steps may be required at initialisation otherwise it sometimes fails
 	batext_AFE_init();
 	batext_choose_gain(3);
 
-	HAL_Delay(100);
-	fres = f_open(&fil, "MYTEST", FA_WRITE | FA_OPEN_APPEND);
-	if(fres != FR_OK) {
-		print_error("f_open error\n", fres);
-	}
 }
 void batext_power_off(void)
 {
 	batext_AFE_deinit();
+#if SAVE_TO_SD
 	batext_SD_deinit();
+#endif
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
 	print_now("BatExt power OFF\r\n");
 }
@@ -113,7 +122,7 @@ static void Save_Callback(int buf_cplt) {
 	}
 	ADCDataRdy[buf_cplt] = 1;
 
-	print_error("ADC Callback : buffer\n", buf_cplt);
+	//print_error("ADC Callback : buffer\n", buf_cplt);
 
 	//start_cycle_count();
 	batext_SD_write((const void *) ADCData[buf_cplt], ADC_BUF_SIZE*S_SIZE); // 2 bytes per uint16
@@ -130,20 +139,42 @@ q15_t buf     [ ADC_BUF_SIZE ]; // Windowed samples
 q15_t fft_buf     [ 2 * ADC_BUF_SIZE ]; // Windowed samples
 q15_t melvec [64];
 q63_t temp_vak = 0;
-static void Spec_Callback(int buf_cplt) {
-	q7_t* in = (q7_t*)ADCData[buf_cplt];
+void vec_computation(q7_t* in) {
 	arm_q7_to_q15(in, buf, ADC_BUF_SIZE);
 
+	print_now("after q7 to q15\r\n");
+	for(int i = 0 ; i < 10 ; i++){
+		print_int(buf[i]);
+		print_now(",");
+	}
+	print_now("\r\n\n");
+
+
+
+
 	arm_mult_q15(buf, hamming_window, buf, ADC_BUF_SIZE);
+	print_now("after mult\r\n");
+	for(int i = 0 ; i < 10 ; i++){
+		print_int(buf[i]);
+		print_now(",");
+	}
+	print_now("\r\n\n");
 
 	arm_rfft_instance_q15 rfft_inst;
 	arm_rfft_init_q15(&rfft_inst, ADC_BUF_SIZE, 0, 1);
-
 	arm_rfft_q15( &rfft_inst, buf, fft_buf);
+
+	print_now("after fft\r\n");
+	for(int i = 0 ; i < 10 ; i++){
+		print_int(fft_buf[i]);
+		print_now(",");
+	}
+	print_now("\r\n\n");
+
 	arm_shift_q15(fft_buf, 7,buf, ADC_BUF_SIZE/2);
 	arm_cmplx_mag_q15(buf, buf, ADC_BUF_SIZE/2);
 
-	for(int i = 0 ; i < 64; i++){
+	for(int i = 0 ; i < 10; i++){
 		arm_dot_prod_q15(buf+s_pos[i],ls[i],l_lens[i], &temp_vak);
 		melvec[i] = (q15_t)(temp_vak>>3);
 	}
@@ -156,23 +187,30 @@ static void Spec_Callback(int buf_cplt) {
 	}
 	print_now("\r\n");
 }
+
+static void Spec_Callback(int buf_cplt) {
+	vec_computation((q7_t*)ADCData[buf_cplt]);
+}
+
 #endif
+
+void eff_Callback(int i){
+#if !SAVE_TO_SD
+	Spec_Callback(i);
+#else
+	Save_Callback(i);
+#endif
+
+}
+
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
-#if !SAVE_TO_SD
-	Spec_Callback(1);
-#else
-	Save_Callback(1);
-#endif
+	eff_Callback(1);
 }
 
 void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef *hadc)
 {
-#if !SAVE_TO_SD
-	Spec_Callback(0);
-#else
-	Save_Callback(0);
-#endif
+	eff_Callback(0);
 }
 
 /*******************

@@ -11,8 +11,11 @@
 #include "main.h"
 #include "arm_math.h"
 
-#define ADC_BUF_SIZE	27500
-#define SAVE_TO_SD 1
+#define ADC_BUF_SIZE	512
+#define SAVE_RAW_AUDIO_TO_SD 0
+#define SAVE_SPEC_NOT_RAW 1
+#define DEBUG_VEC_COMP 0
+#define PRINT_VEC 1
 
 void batext_power_on(void);
 void batext_power_off(void);

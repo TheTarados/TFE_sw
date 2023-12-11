@@ -46,9 +46,7 @@ void batext_power_on(void)
 	print_now("BatExt power ON\r\n");
 	HAL_Delay(100); // for card insert cap charge
 
-#if SAVE_TO_SD
 	if(init_sd_power_on())return;
-#endif
 	HAL_Delay(1000); // more delays between steps may be required at initialisation otherwise it sometimes fails
 	batext_AFE_init();
 	batext_choose_gain(3);
@@ -57,9 +55,7 @@ void batext_power_on(void)
 void batext_power_off(void)
 {
 	batext_AFE_deinit();
-#if SAVE_TO_SD
 	batext_SD_deinit();
-#endif
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
 	print_now("BatExt power OFF\r\n");
 }
@@ -114,7 +110,7 @@ void batext_choose_gain(uint8_t gain)
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, (gain & 0x02) >> 1);
 }
 
-#if SAVE_TO_SD
+#if SAVE_RAW_AUDIO_TO_SD
 static void Save_Callback(int buf_cplt) {
 	if (ADCDataRdy[1-buf_cplt]) {
 		print_now("Error: ADC Data buffer full\r\n");
@@ -134,71 +130,169 @@ static void Save_Callback(int buf_cplt) {
 
 #endif
 
-#if !SAVE_TO_SD
+#if !SAVE_RAW_AUDIO_TO_SD
+
+q15_t log_approx(q15_t x){
+	if(x<2997){
+	    if(x<344){
+	        if(x<58){
+	            return x*201+0;
+	        }else{
+	            return x*19+10573;
+	        }
+	    }else{
+	        if(x<1175){
+	            return x*4+15548;
+	        }else{
+	            return x*1+19268;
+	        }
+	    }
+	}else{
+	    if(x<11876){
+	        if(x<6353){
+	            return x/1+22199;
+	        }else{
+	            return x/2+24603;
+	        }
+	    }else{
+	        if(x<20338){
+	            return x/4+26640;
+	        }else{
+	            return x/7+28519;
+	        }
+	    }
+	}
+}
+
 q15_t buf     [ ADC_BUF_SIZE ]; // Windowed samples
 q15_t fft_buf     [ 2 * ADC_BUF_SIZE ]; // Windowed samples
-q15_t melvec [64];
+q15_t melspec [N_MEL_BIN*N_MELVEC];
+q15_t* melvec[N_MELVEC] = {melspec, melspec + N_MEL_BIN, melspec + 2*N_MEL_BIN, melspec + 3 *N_MEL_BIN, melspec + 4*N_MEL_BIN,
+							melspec+5*N_MEL_BIN, melspec + 6*N_MEL_BIN, melspec + 7*N_MEL_BIN, melspec + 8 *N_MEL_BIN, melspec + 9*N_MEL_BIN,};
 q63_t temp_vak = 0;
+uint8_t vec_counter = 0;
 void vec_computation(q7_t* in) {
 	arm_q7_to_q15(in, buf, ADC_BUF_SIZE);
-
+#if DEBUG_VEC_COMP
 	print_now("after q7 to q15\r\n");
-	for(int i = 0 ; i < 10 ; i++){
+	for(int i = 0 ; i < ADC_BUF_SIZE ; i++){
 		print_int(buf[i]);
 		print_now(",");
 	}
 	print_now("\r\n\n");
-
+#endif
 
 
 
 	arm_mult_q15(buf, hamming_window, buf, ADC_BUF_SIZE);
+#if DEBUG_VEC_COMP
 	print_now("after mult\r\n");
-	for(int i = 0 ; i < 10 ; i++){
+	for(int i = 0 ; i < ADC_BUF_SIZE ; i++){
 		print_int(buf[i]);
 		print_now(",");
 	}
 	print_now("\r\n\n");
-
+#endif
 	arm_rfft_instance_q15 rfft_inst;
 	arm_rfft_init_q15(&rfft_inst, ADC_BUF_SIZE, 0, 1);
 	arm_rfft_q15( &rfft_inst, buf, fft_buf);
 
+#if DEBUG_VEC_COMP
 	print_now("after fft\r\n");
-	for(int i = 0 ; i < 10 ; i++){
+	for(int i = 0 ; i < ADC_BUF_SIZE ; i++){
 		print_int(fft_buf[i]);
 		print_now(",");
 	}
 	print_now("\r\n\n");
+#endif
 
-	arm_shift_q15(fft_buf, 7,buf, ADC_BUF_SIZE/2);
-	arm_cmplx_mag_q15(buf, buf, ADC_BUF_SIZE/2);
+	arm_shift_q15(fft_buf, 1,buf, ADC_BUF_SIZE);
 
-	for(int i = 0 ; i < 10; i++){
+#if DEBUG_VEC_COMP
+	print_now("after shift\r\n");
+	for(int i = 0 ; i < ADC_BUF_SIZE/2 ; i++){
+		print_int(buf[i]);
+		print_now(",");
+	}
+	print_now("\r\n\n");
+#endif
+	arm_cmplx_mag_squared_q15(buf, buf, ADC_BUF_SIZE/2);
+
+#if DEBUG_VEC_COMP
+	print_now("after abs\r\n");
+	for(int i = 0 ; i < ADC_BUF_SIZE/2 ; i++){
+		print_int(buf[i]);
+		print_now(",");
+	}
+	print_now("\r\n\n");
+#endif
+
+	for(int i = 0 ; i < ADC_BUF_SIZE/2 ; i++){
+		buf[i] = log_approx(buf[i]);
+	}
+
+#if DEBUG_VEC_COMP
+	print_now("after log\r\n");
+	for(int i = 0 ; i < ADC_BUF_SIZE/2 ; i++){
+		print_int(buf[i]);
+		print_now(",");
+	}
+	print_now("\r\n\n");
+#endif
+
+	for(int i = 0 ; i < N_MEL_BIN; i++){
 		arm_dot_prod_q15(buf+s_pos[i],ls[i],l_lens[i], &temp_vak);
-		melvec[i] = (q15_t)(temp_vak>>3);
+		temp_vak >>= 16;
+		//if (temp_vak>=1<<14){print_now("We use all of our bits! : )");}
+		//if (temp_vak>=1<<15){print_now("In fact we even use the ones we don't have :'(");}
+		melvec[vec_counter][i] = (q15_t)temp_vak;
 	}
 	/*
 	arm_mat_mult_fast_q15(&hz2mel_inst, &fftmag_inst, &melvec_inst, buf);
 	*/
-	for(int i = 0 ; i < 64 ; i++){
-		print_int(melvec[i]);
+#if DEBUG_VEC_COMP
+	print_now("after mat mul\r\n");
+#endif
+#if PRINT_VEC || DEBUG_VEC_COMP
+	for(int i = 0 ; i < N_MEL_BIN ; i++){
+		print_int(melvec[vec_counter][i]);
 		print_now(",");
 	}
 	print_now("\r\n");
+#endif
 }
 
-static void Spec_Callback(int buf_cplt) {
+void treat_spec(){
+	batext_SD_write(melspec, N_MELVEC*N_MEL_BIN*2);
+}
+
+static void Vec_Callback(int buf_cplt) {
+	if (ADCDataRdy[1-buf_cplt]) {
+		print_now("Error: ADC Data buffer full\r\n");
+		Error_Handler();
+	}
+	ADCDataRdy[buf_cplt] = 1;
+	//print_now("Computing a vec : ");
 	vec_computation((q7_t*)ADCData[buf_cplt]);
+	vec_counter++;
+	print_int(vec_counter);
+	//print_now("\r\n");
+	if(vec_counter==10){
+		//print_now("Saving a spec\r\n");
+		treat_spec();
+		vec_counter = 0;
+	}
+	ADCDataRdy[buf_cplt] = 0;
+
 }
 
 #endif
 
 void eff_Callback(int i){
-#if !SAVE_TO_SD
-	Spec_Callback(i);
-#else
+#if SAVE_RAW_AUDIO_TO_SD
 	Save_Callback(i);
+#else
+	Vec_Callback(i);
 #endif
 
 }

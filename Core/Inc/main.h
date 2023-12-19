@@ -53,11 +53,6 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-void start_cycle_count();
-void stop_cycle_count(char *s);
-void print_now(const char*);
-void print_int(int);
-void print_error(const char*, int);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
@@ -74,10 +69,8 @@ void print_error(const char*, int);
 #define LED_GPIO_Port GPIOA
 #define Button1_Pin GPIO_PIN_6
 #define Button1_GPIO_Port GPIOA
-#define Button1_EXTI_IRQn EXTI9_5_IRQn
 #define Button2_Pin GPIO_PIN_7
 #define Button2_GPIO_Port GPIOA
-#define Button2_EXTI_IRQn EXTI9_5_IRQn
 #define BatExt_gain1_Pin GPIO_PIN_10
 #define BatExt_gain1_GPIO_Port GPIOA
 #define BatExt_gain2_Pin GPIO_PIN_11

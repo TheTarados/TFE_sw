@@ -39,6 +39,7 @@
         * EVENT_OUT
         * EXTI
      PB6   ------> I2C1_SCL
+     PA12   ------> ADC_IN8
 */
 void MX_GPIO_Init(void)
 {
@@ -54,10 +55,7 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(BatExt_CS_GPIO_Port, BatExt_CS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(BatExt_PWR_GPIO_Port, BatExt_PWR_Pin, GPIO_PIN_SET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, LED_Pin|BatExt_gain1_Pin|BatExt_gain2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, BatExt_PWR_Pin|LED_Pin|BatExt_gain1_Pin|BatExt_gain2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PB6 */
   GPIO_InitStruct.Pin = GPIO_PIN_6;
@@ -90,12 +88,14 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pins : PAPin PAPin */
   GPIO_InitStruct.Pin = Button1_Pin|Button2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 2, 0);
-  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+  /*Configure GPIO pin : PA12 */
+  GPIO_InitStruct.Pin = GPIO_PIN_12;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 }
 

@@ -8,6 +8,7 @@
 #include "batext.h"
 #include "app_fatfs.h"
 #include "spectrogram_tables.h"
+#include "app_x-cube-ai.h"
 
 void batext_AFE_init(void);
 void batext_AFE_deinit(void);
@@ -17,6 +18,17 @@ int batext_SD_write(const void *data, uint32_t size);
 
 typedef uint8_t SAMPLE;
 #define S_SIZE sizeof(SAMPLE)
+
+
+q15_t buf     [ SAMPLE_PER_MELVEC ]; // Windowed samples
+q15_t fft_buf     [ 2 * SAMPLE_PER_MELVEC ]; // Windowed samples
+q63_t temp_vak = 0;
+uint8_t vec_counter = 0;
+
+q7_t melspec [N_MEL_BIN*N_MELVEC];
+q7_t* melvec[N_MELVEC] = {melspec, melspec + N_MEL_BIN, melspec + 2*N_MEL_BIN, melspec + 3 *N_MEL_BIN, melspec + 4*N_MEL_BIN,
+							melspec+5*N_MEL_BIN, melspec + 6*N_MEL_BIN, melspec + 7*N_MEL_BIN, melspec + 8 *N_MEL_BIN, melspec + 9*N_MEL_BIN,};
+
 
 FATFS FatFs; 	//Fatfs handle
 FIL fil; 		//File handle
@@ -164,15 +176,9 @@ q15_t log_approx(q15_t x){
 	}
 }
 
-q15_t buf     [ ADC_BUF_SIZE ]; // Windowed samples
-q15_t fft_buf     [ 2 * ADC_BUF_SIZE ]; // Windowed samples
-q15_t melspec [N_MEL_BIN*N_MELVEC];
-q15_t* melvec[N_MELVEC] = {melspec, melspec + N_MEL_BIN, melspec + 2*N_MEL_BIN, melspec + 3 *N_MEL_BIN, melspec + 4*N_MEL_BIN,
-							melspec+5*N_MEL_BIN, melspec + 6*N_MEL_BIN, melspec + 7*N_MEL_BIN, melspec + 8 *N_MEL_BIN, melspec + 9*N_MEL_BIN,};
-q63_t temp_vak = 0;
-uint8_t vec_counter = 0;
-void vec_computation(q7_t* in) {
-	arm_q7_to_q15(in, buf, ADC_BUF_SIZE);
+
+void vec_computation(q7_t* in, q7_t* out) {
+	arm_q7_to_q15(in, buf, SAMPLE_PER_MELVEC);
 #if DEBUG_VEC_COMP
 	print_now("after q7 to q15\r\n");
 	for(int i = 0 ; i < ADC_BUF_SIZE ; i++){
@@ -184,56 +190,56 @@ void vec_computation(q7_t* in) {
 
 
 
-	arm_mult_q15(buf, hamming_window, buf, ADC_BUF_SIZE);
+	arm_mult_q15(buf, hamming_window, buf, SAMPLE_PER_MELVEC);
 #if DEBUG_VEC_COMP
 	print_now("after mult\r\n");
-	for(int i = 0 ; i < ADC_BUF_SIZE ; i++){
+	for(int i = 0 ; i < SAMPLE_PER_MELVEC ; i++){
 		print_int(buf[i]);
 		print_now(",");
 	}
 	print_now("\r\n\n");
 #endif
 	arm_rfft_instance_q15 rfft_inst;
-	arm_rfft_init_q15(&rfft_inst, ADC_BUF_SIZE, 0, 1);
+	arm_rfft_init_q15(&rfft_inst, SAMPLE_PER_MELVEC, 0, 1);
 	arm_rfft_q15( &rfft_inst, buf, fft_buf);
 
 #if DEBUG_VEC_COMP
 	print_now("after fft\r\n");
-	for(int i = 0 ; i < ADC_BUF_SIZE ; i++){
+	for(int i = 0 ; i < SAMPLE_PER_MELVEC ; i++){
 		print_int(fft_buf[i]);
 		print_now(",");
 	}
 	print_now("\r\n\n");
 #endif
 
-	arm_shift_q15(fft_buf, 1,buf, ADC_BUF_SIZE);
+	arm_shift_q15(fft_buf, 1,buf, SAMPLE_PER_MELVEC);
 
 #if DEBUG_VEC_COMP
 	print_now("after shift\r\n");
-	for(int i = 0 ; i < ADC_BUF_SIZE/2 ; i++){
+	for(int i = 0 ; i < SAMPLE_PER_MELVEC/2 ; i++){
 		print_int(buf[i]);
 		print_now(",");
 	}
 	print_now("\r\n\n");
 #endif
-	arm_cmplx_mag_squared_q15(buf, buf, ADC_BUF_SIZE/2);
+	arm_cmplx_mag_squared_q15(buf, buf, SAMPLE_PER_MELVEC/2);
 
 #if DEBUG_VEC_COMP
 	print_now("after abs\r\n");
-	for(int i = 0 ; i < ADC_BUF_SIZE/2 ; i++){
+	for(int i = 0 ; i < SAMPLE_PER_MELVEC/2 ; i++){
 		print_int(buf[i]);
 		print_now(",");
 	}
 	print_now("\r\n\n");
 #endif
 
-	for(int i = 0 ; i < ADC_BUF_SIZE/2 ; i++){
+	for(int i = 0 ; i < SAMPLE_PER_MELVEC/2 ; i++){
 		buf[i] = log_approx(buf[i]);
 	}
 
 #if DEBUG_VEC_COMP
 	print_now("after log\r\n");
-	for(int i = 0 ; i < ADC_BUF_SIZE/2 ; i++){
+	for(int i = 0 ; i < SAMPLE_PER_MELVEC/2 ; i++){
 		print_int(buf[i]);
 		print_now(",");
 	}
@@ -242,10 +248,10 @@ void vec_computation(q7_t* in) {
 
 	for(int i = 0 ; i < N_MEL_BIN; i++){
 		arm_dot_prod_q15(buf+s_pos[i],ls[i],l_lens[i], &temp_vak);
-		temp_vak >>= 16;
+		temp_vak >>= (16+8);
 		//if (temp_vak>=1<<14){print_now("We use all of our bits! : )");}
 		//if (temp_vak>=1<<15){print_now("In fact we even use the ones we don't have :'(");}
-		melvec[vec_counter][i] = (q15_t)temp_vak;
+		out[i] = (q7_t)temp_vak;
 	}
 	/*
 	arm_mat_mult_fast_q15(&hz2mel_inst, &fftmag_inst, &melvec_inst, buf);
@@ -262,8 +268,25 @@ void vec_computation(q7_t* in) {
 #endif
 }
 
-void treat_spec(){
-	batext_SD_write(melspec, N_MELVEC*N_MEL_BIN*2);
+void treat_spec(q7_t* audio_data){
+	//batext_SD_write(melspec, N_MELVEC*N_MEL_BIN*2);
+	//start_cycle_count();
+	for (int i = 0 ; i < N_MELVEC ; i++){
+		vec_computation(audio_data+HOP_LENGTH*i, melvec[i]);
+	}
+
+	for (int i = 0 ; i < N_MEL_BIN ; i++){
+		int16_t mean = 0;
+		for (int j = 0 ; j < N_MELVEC ; j++){
+			mean += melvec[j][i];
+		}
+		mean /= N_MELVEC;
+		for (int j = 0 ; j < N_MELVEC ; j++){
+			melvec[j][i] -= (int8_t)mean;
+		}
+	}
+	MX_X_CUBE_AI_Process();
+	//stop_cycle_count("Full melspec treatment");
 }
 
 static void Vec_Callback(int buf_cplt) {
@@ -272,16 +295,7 @@ static void Vec_Callback(int buf_cplt) {
 		Error_Handler();
 	}
 	ADCDataRdy[buf_cplt] = 1;
-	//print_now("Computing a vec : ");
-	vec_computation((q7_t*)ADCData[buf_cplt]);
-	vec_counter++;
-	print_int(vec_counter);
-	//print_now("\r\n");
-	if(vec_counter==10){
-		//print_now("Saving a spec\r\n");
-		treat_spec();
-		vec_counter = 0;
-	}
+	treat_spec((q7_t*)ADCData[buf_cplt]);
 	ADCDataRdy[buf_cplt] = 0;
 
 }

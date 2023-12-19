@@ -55,9 +55,9 @@ void Error_Handler(void);
 /* USER CODE BEGIN EFP */
 void start_cycle_count();
 void stop_cycle_count(char *s);
-void print_now(char*);
+void print_now(const char*);
 void print_int(int);
-void print_error(char*, int);
+void print_error(const char*, int);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

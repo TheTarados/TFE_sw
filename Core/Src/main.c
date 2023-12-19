@@ -19,12 +19,14 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "adc.h"
+#include "crc.h"
 #include "dma.h"
 #include "app_fatfs.h"
 #include "usart.h"
 #include "spi.h"
 #include "tim.h"
 #include "gpio.h"
+#include "app_x-cube-ai.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -101,12 +103,15 @@ int main(void)
   MX_TIM1_Init();
   MX_SPI1_Init();
   MX_FATFS_Init();
+  MX_CRC_Init();
+  MX_X_CUBE_AI_Init();
   /* USER CODE BEGIN 2 */
 
   // Print banner and blink LED //
   print_now("\n\nHello world!\n\r\n");
 
   blink(200);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -152,9 +157,12 @@ int main(void)
 #endif
   while (1)
   {
+	  if(0){
     /* USER CODE END WHILE */
 
+  MX_X_CUBE_AI_Process();
     /* USER CODE BEGIN 3 */
+	  }
   }
   /* USER CODE END 3 */
 }
@@ -208,7 +216,7 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void print_now(char* string){
+void print_now(const char* string){
 #if(VERBOSE)
 	HAL_UART_Transmit(&hlpuart1, (uint8_t *)string, strlen(string), 0xFFFF);
 #endif
@@ -237,7 +245,7 @@ void print_int(int my_int){
 	}
 #endif
 }
-void print_error(char* string, int my_int){
+void print_error(const char* string, int my_int){
 #if(VERBOSE)
 	print_now(string);
 	print_int(my_int);
@@ -317,6 +325,7 @@ void Error_Handler(void)
   __disable_irq();
   while (1)
   {
+	  print_now("ERROR!!!");
   }
   /* USER CODE END Error_Handler_Debug */
 }

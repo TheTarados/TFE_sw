@@ -2,12 +2,12 @@
   ******************************************************************************
   * @file    bat_det_net_data.c
   * @author  AST Embedded Analytics Research Platform
-  * @date    Sat Dec 16 13:35:16 2023
+  * @date    Sat Jan 27 22:36:30 2024
   * @brief   AI Tool Automatic Code Generator for Embedded NN computing
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2023 STMicroelectronics.
+  * Copyright (c) 2024 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -21,8 +21,8 @@
 AI_API_DECLARE_BEGIN
 ai_buffer g_bat_det_net_data_map_activations[AI_BAT_DET_NET_DATA_ACTIVATIONS_COUNT] = {
   AI_BUFFER_INIT(AI_FLAG_NONE,  AI_BUFFER_FORMAT_U8,
-    AI_BUFFER_SHAPE_INIT(AI_SHAPE_BCWH, 4, 1, 1004, 1, 1),
-    1004, NULL, NULL),    /* heap_overlay_pool */
+    AI_BUFFER_SHAPE_INIT(AI_SHAPE_BCWH, 4, 1, 2788, 1, 1),
+    2788, NULL, NULL),    /* heap_overlay_pool */
   };
 ai_buffer g_bat_det_net_data_map_weights[AI_BAT_DET_NET_DATA_WEIGHTS_COUNT] = {
   AI_BUFFER_INIT(AI_FLAG_NONE,  AI_BUFFER_FORMAT_U8,

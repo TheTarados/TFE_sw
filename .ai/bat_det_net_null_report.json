@@ -1,7 +1,7 @@
 {
     "_allocate_inputs": 4,
     "_allocate_outputs": 4,
-    "cli_parameters": "validate --name bat_det_net -m /home/base_usr/TFE_Python/quantization_DEFAULT_8bit_model_h5_to_tflite.tflite --type tflite --compression none --verbosity 1 --workspace /tmp/mxAI_workspace7115081055483910361285611724871350 --output /home/base_usr/.stm32cubemx/bat_det_net_output --allocate-inputs -O time --allocate-outputs --valoutput /home/base_usr/TFE_OwnFramework/trainlab_float.npy --valinput /home/base_usr/TFE_OwnFramework/trainfeat_float.npy",
+    "cli_parameters": "generate --name bat_det_net -m /home/base_usr/TFE_Python/quantization_DEFAULT_8bit_model_h5_to_tflite.tflite --type tflite --compression none --verbosity 1 --workspace /tmp/mxAI_workspace3801357055549213471238101717820680 --output /home/base_usr/.stm32cubemx/bat_det_net_output --allocate-inputs --series stm32wl -O time --allocate-outputs",
     "cli_version": {
         "major": 1,
         "micro": 0,
@@ -13,12 +13,12 @@
         "factor": null,
         "layers": {}
     },
-    "date_time": "Mon Dec 18 15:38:21 2023",
+    "date_time": "Sat Jan 27 22:36:30 2024",
     "error": 0,
     "error_str": [],
-    "exec_cmd": "validate",
+    "exec_cmd": "generate",
     "exec_duration": 0.0,
-    "hash": "e7d205e20c95ac7b85ed6a35486a4719",
+    "hash": "9e4cb1aa061e7bf900b751385634637e",
     "inputs": [
         "serving_default_input_10"
     ],
@@ -428,44 +428,7 @@
         "micro": 0,
         "minor": 1
     },
-    "val_error": 0.35681137442588806,
-    "val_error_desc": "c-model (rmse) #1",
-    "val_metrics": [
-        {
-            "acc": "n.a.",
-            "cos": 0.8671447038650513,
-            "desc": "x86 c-model #1",
-            "l2r": 0.5321785807609558,
-            "mae": 0.23256683349609375,
-            "mean": -0.054786521941423416,
-            "nse": 0.49077740892147614,
-            "rmse": 0.35681137442588806,
-            "std": 0.35259220004081726,
-            "ts_name": "nl_7, ai_i8, (1,1), m_id=[7]"
-        },
-        {
-            "acc": "n.a.",
-            "cos": 0.8671447038650513,
-            "desc": "original model #1",
-            "l2r": 0.5321785807609558,
-            "mae": 0.23256683349609375,
-            "mean": -0.054786521941423416,
-            "nse": 0.49077740892147614,
-            "rmse": 0.35681137442588806,
-            "std": 0.35259220004081726,
-            "ts_name": "nl_7, ai_i8, (1,1), m_id=[7]"
-        },
-        {
-            "acc": "n.a.",
-            "cos": 1.0,
-            "desc": "X-cross #1",
-            "l2r": 0.0,
-            "mae": 0.0,
-            "mean": 0.0,
-            "nse": 1.0,
-            "rmse": 0.0,
-            "std": 0.0,
-            "ts_name": "nl_7, ai_i8, (1,1), m_id=[7]"
-        }
-    ]
+    "val_error": -1.0,
+    "val_error_desc": "None (None) #-1",
+    "val_metrics": []
 }

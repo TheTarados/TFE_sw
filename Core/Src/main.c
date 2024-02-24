@@ -65,7 +65,7 @@ void blink(int);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+	HAL_PWREx_EnableLowPowerRunMode();
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -96,6 +96,8 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  HAL_SuspendTick();
+  HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
   while (1)
   {
     /* USER CODE END WHILE */

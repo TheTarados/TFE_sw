@@ -17,14 +17,15 @@
 #define HOP_LENGTH	690
 
 #define SAVE_RAW_AUDIO 1
+#define CLASSIFY 0
 
 #define UART 	0
 #define SD_CARD 1
 
 
-#define CHOSEN_OUTPUT UART
+#define CHOSEN_OUTPUT SD_CARD
 
-#if SAVE_RAW_AUDIO
+#if (SAVE_RAW_AUDIO  && CHOSEN_OUTPUT == SD_CARD)
 #define ADC_BUF_SIZE	12500
 #else
 #define ADC_BUF_SIZE	HOP_LENGTH*N_MELVEC

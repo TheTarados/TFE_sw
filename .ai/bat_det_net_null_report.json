@@ -1,7 +1,7 @@
 {
     "_allocate_inputs": 4,
     "_allocate_outputs": 4,
-    "cli_parameters": "generate --name bat_det_net -m /home/base_usr/TFE_Python/quantization_DEFAULT_8bit_model_h5_to_tflite.tflite --type tflite --compression none --verbosity 1 --workspace /tmp/mxAI_workspace3801357055549213471238101717820680 --output /home/base_usr/.stm32cubemx/bat_det_net_output --allocate-inputs --series stm32wl -O time --allocate-outputs",
+    "cli_parameters": "generate --name bat_det_net -m /home/base_usr/TFE_Python/quantization_DEFAULT_8bit_model_h5_to_tflite.tflite --type tflite --compression none --verbosity 1 --workspace /tmp/mxAI_workspace346959322117852603494428538170645 --output /home/base_usr/.stm32cubemx/bat_det_net_output --allocate-inputs --series stm32wl -O time --allocate-outputs",
     "cli_version": {
         "major": 1,
         "micro": 0,
@@ -13,7 +13,7 @@
         "factor": null,
         "layers": {}
     },
-    "date_time": "Sat Jan 27 22:36:30 2024",
+    "date_time": "Tue Feb 13 21:38:39 2024",
     "error": 0,
     "error_str": [],
     "exec_cmd": "generate",

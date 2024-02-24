@@ -594,6 +594,7 @@ const uint8_t s_pos[64] = { 18, 18, 19, 20, 21, 21, 22, 23, 24, 25, 26, 27, 28, 
 
 #define MIN_INDEX_MATMUL 18
 #define MAX_INDEX_MATMUL (191+14)
+//+1 to make it even for optimizations
 
 const q15_t* ls[64] = {l0, l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12, l13, l14, l15, l16, l17, l18, l19, l20, l21, l22, l23, l24, l25, l26, l27, l28, l29, l30, l31, l32, l33, l34, l35, l36, l37, l38, l39, l40, l41, l42, l43, l44, l45, l46, l47, l48, l49, l50, l51, l52, l53, l54, l55, l56, l57, l58, l59, l60, l61, l62, l63};
 #endif /* INC_SPECTROGRAM_TABLES_H_ */

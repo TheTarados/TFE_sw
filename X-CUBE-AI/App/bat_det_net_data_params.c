@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    bat_det_net_data_params.c
   * @author  AST Embedded Analytics Research Platform
-  * @date    Sat Jan 27 22:36:30 2024
+  * @date    Tue Feb 13 21:38:39 2024
   * @brief   AI Tool Automatic Code Generator for Embedded NN computing
   ******************************************************************************
   * Copyright (c) 2024 STMicroelectronics.

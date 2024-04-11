@@ -1,6 +1,6 @@
 Neural Network Tools for STM32 family v1.7.0 (stm.ai v8.1.0-19520)
-Created date          : 2024-02-13 21:38:39
-Parameters            : generate --name bat_det_net -m /home/base_usr/TFE_Python/quantization_DEFAULT_8bit_model_h5_to_tflite.tflite --type tflite --compression none --verbosity 1 --workspace /tmp/mxAI_workspace346959322117852603494428538170645 --output /home/base_usr/.stm32cubemx/bat_det_net_output --allocate-inputs --series stm32wl -O time --allocate-outputs
+Created date          : 2024-03-02 16:23:21
+Parameters            : generate --name bat_det_net -m /home/base_usr/TFE_Python/quantization_DEFAULT_8bit_model_h5_to_tflite.tflite --type tflite --compression none --verbosity 1 --workspace /tmp/mxAI_workspace150261203372964837905253234066920 --output /home/base_usr/.stm32cubemx/bat_det_net_output --allocate-inputs --series stm32wl -O time --allocate-outputs
 
 Exec/report summary (generate)
 -------------------------------------------------------------------------------------------------------
@@ -11,7 +11,7 @@ compression        :   none
 options            :   allocate-inputs, allocate-outputs                                               
 optimization       :   time                                                                            
 target/series      :   stm32wl                                                                         
-workspace dir      :   /tmp/mxAI_workspace346959322117852603494428538170645                            
+workspace dir      :   /tmp/mxAI_workspace150261203372964837905253234066920                            
 output dir         :   /home/base_usr/.stm32cubemx/bat_det_net_output                                  
 model_fmt          :   ss/sa per channel                                                               
 model_name         :   quantization_DEFAULT_8bit_model_h5_to_tflite                                    

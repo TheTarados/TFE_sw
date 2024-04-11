@@ -133,12 +133,18 @@ void xmit_spi_multi (
 )
 {
 	HAL_SPI_Transmit(&SD_SPI_HANDLE, (BYTE*)buff, btx, HAL_MAX_DELAY);
-
+/*
+#define byte_sent (1<<0) //Must be between 1<<0 and 1<<9 included
 	//start_cycle_count();
-	/*for (int i = 0 ; i < btx ; i++){
-		HAL_SPI_Transmit(&SD_SPI_HANDLE, (BYTE*)buff+i, 1, HAL_MAX_DELAY);
-	}*/
-	//stop_cycle_count("Full 256 byte send");
+	for (int i = 0 ; i < btx ; i+=byte_sent){
+		start_cycle_count();
+		HAL_SPI_Transmit(&SD_SPI_HANDLE, (BYTE*)buff+i, byte_sent, HAL_MAX_DELAY);
+
+		stop_cycle_count("One transfer sent");
+	}
+	//stop_cycle_count("Full 512 byte sent");
+	 *
+	 */
 }
 #endif
 

@@ -31,7 +31,7 @@
 #define ADC_BUF_SIZE	HOP_LENGTH*N_MELVEC
 #endif
 #define DEBUG_VEC_COMP	0
-#define PRINT_VEC		1
+#define PRINT_VEC		0
 
 void batext_power_on(void);
 void batext_power_off(void);

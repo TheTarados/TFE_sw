@@ -24,6 +24,7 @@ int batext_SD_write(const void *data, uint32_t size);
 FATFS FatFs; 	//Fatfs handle
 FIL fil; 		//File handle
 FRESULT fres; //Result after operation
+//+sint write_count = 0;
 
 int init_sd_power_on(void){
 	if(!batext_is_card_inserted()) {
@@ -132,10 +133,10 @@ static void Save_Callback(int buf_cplt) {
 #if (SAVE_RAW_AUDIO && CHOSEN_OUTPUT == UART)
 	HAL_UART_Transmit(&hlpuart1, (uint8_t *) ADCData[buf_cplt], ADC_BUF_SIZE*S_SIZE, 0xFFFF);
 #else
-	start_cycle_count();
+	//start_cycle_count();
 	batext_SD_write((const void *) ADCData[buf_cplt], ADC_BUF_SIZE*S_SIZE);
+	//stop_cycle_count("SD Write");
 #endif
-	stop_cycle_count("SD Write");
 	//APP_PRINTF("Wrote %d bytes\r\n", ADC_BUF_SIZE*S_SIZE);
 
 	ADCDataRdy[buf_cplt] = 0;
@@ -224,14 +225,15 @@ void vec_computation(q15_t* in, q7_t* out) {
 #if DEBUG_VEC_COMP
 	print_array_q15("after mult", buf, SAMPLE_PER_MELVEC);
 #endif
-	//start_cycle_count();
+
+
 	arm_rfft_instance_q15 rfft_inst;
 	arm_rfft_init_q15(&rfft_inst, SAMPLE_PER_MELVEC, 0, 1);
 	arm_rfft_q15( &rfft_inst, buf, fft_buf);
-	//stop_cycle_count("fft ");
 #if DEBUG_VEC_COMP
 	print_array_q15("after fft", fft_buf, SAMPLE_PER_MELVEC);
 #endif
+
 
 	for(int i = MIN_INDEX_MATMUL ; i < MAX_INDEX_MATMUL; i+=4){
 		q15_t shifted =  word_fft_buf[i]; //add eventual shifts
@@ -244,16 +246,17 @@ void vec_computation(q15_t* in, q7_t* out) {
 		buf[i+3] = bin_search_log(__SMUAD(shifted, shifted)>>16);
 	}
 
+
 #if DEBUG_VEC_COMP
 	print_array_q15("after log", buf, SAMPLE_PER_MELVEC/2);
 #endif
-
-	#pragma GCC unroll 64
+	start_cycle_count();
+	#pragma GCC unroll 1
 	for(int i = 0 ; i < N_MEL_BIN; i++){
 		arm_dot_prod_q15(buf+s_pos[i],ls[i],l_lens[i], &temp_vak);
 		out[i] = (q7_t)(temp_vak>>(16+7));
 	}
-
+	stop_cycle_count("Mat mul ");
 #if PRINT_VEC || DEBUG_VEC_COMP
 	print_array_q7("Melvec", out, N_MEL_BIN);
 #endif
@@ -377,6 +380,17 @@ void batext_SD_deinit(void)
 
 int batext_SD_write(const void *data, uint32_t size)
 {
+	/*if(write_count == 0){
+
+		fres = f_open(&fil, "MYTEST", FA_WRITE | FA_OPEN_APPEND);
+
+		write_count = (write_count+1)%20;
+		if(fres != FR_OK) {
+			print_error("f_open error\n", fres);
+			return 1;
+		}
+	}*/
+
 	UINT written;
 	fres = f_write(&fil, data, size, &written);
 	if(fres != FR_OK) {
@@ -389,10 +403,13 @@ int batext_SD_write(const void *data, uint32_t size)
 			print_error("f_open error\n", fres);
 		}
 		fres = f_write(&fil, data, size, &written); //If we still fail, it seems dead
-		return fres;
 	}
 	if(written != size) {
 		print_now("f_write error : did not write all the bytes\r\n");
 	}
+	/*
+	if(write_count == 0){
+		f_close(&fil);
+	}*/
 	return FR_OK;
 }

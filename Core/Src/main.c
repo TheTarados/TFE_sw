@@ -348,6 +348,8 @@ void Error_Handler(void)
   while (1)
   {
 	  print_now("ERROR!!!");
+
+	blink(100);
   }
   /* USER CODE END Error_Handler_Debug */
 }

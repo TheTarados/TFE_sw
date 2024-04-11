@@ -768,7 +768,7 @@
         }
     ],
     "c_activations_count": 1,
-    "date_time": "Tue Feb 13 21:38:39 2024",
+    "date_time": "Sat Mar  2 16:23:20 2024",
     "model_name": "quantization_default_8bit_model_h5_to_tflite",
     "tool_version": {
         "major": 1,

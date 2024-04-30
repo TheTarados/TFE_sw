@@ -59,14 +59,10 @@ void Error_Handler(void);
 #define RTC_PREDIV_A ((1<<(15-RTC_N_PREDIV_S))-1)
 #define RTC_N_PREDIV_S 10
 #define RTC_PREDIV_S ((1<<RTC_N_PREDIV_S)-1)
-#define BatExt_CS_Pin GPIO_PIN_8
-#define BatExt_CS_GPIO_Port GPIOB
 #define LED_Pin GPIO_PIN_5
 #define LED_GPIO_Port GPIOA
 #define Button1_Pin GPIO_PIN_6
 #define Button1_GPIO_Port GPIOA
-#define Button2_Pin GPIO_PIN_7
-#define Button2_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 #define VERBOSE					1

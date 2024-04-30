@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    bat_det_net.h
   * @author  AST Embedded Analytics Research Platform
-  * @date    Sat Mar  2 16:23:20 2024
+  * @date    Tue Apr 30 10:47:56 2024
   * @brief   AI Tool Automatic Code Generator for Embedded NN computing
   ******************************************************************************
   * @attention
@@ -46,11 +46,11 @@ AI_DEPRECATED
   AI_BAT_DET_NET_IN_1_SIZE_BYTES, \
 }
 #define AI_BAT_DET_NET_IN_1_FORMAT      AI_BUFFER_FORMAT_S8
-#define AI_BAT_DET_NET_IN_1_HEIGHT      (64)
-#define AI_BAT_DET_NET_IN_1_WIDTH       (10)
+#define AI_BAT_DET_NET_IN_1_HEIGHT      (20)
+#define AI_BAT_DET_NET_IN_1_WIDTH       (12)
 #define AI_BAT_DET_NET_IN_1_CHANNEL     (1)
-#define AI_BAT_DET_NET_IN_1_SIZE        (64 * 10 * 1)
-#define AI_BAT_DET_NET_IN_1_SIZE_BYTES  (640)
+#define AI_BAT_DET_NET_IN_1_SIZE        (20 * 12 * 1)
+#define AI_BAT_DET_NET_IN_1_SIZE_BYTES  (240)
 
 /******************************************************************************/
 #define AI_BAT_DET_NET_OUT_NUM       (1)

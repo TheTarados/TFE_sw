@@ -105,11 +105,11 @@ static ai_buffer* ai_output;
 static void ai_log_err(const ai_error err, const char *fct)
 {
   /* USER CODE BEGIN log */
-	print_now("Error in AI: ");
-	if (fct)print_now(fct);
-
-    print_error("\r\ntype=", err.type);
-    print_error("code=", err.code);
+  if (fct)
+    printf("TEMPLATE - Error (%s) - type=0x%02x code=0x%02x\r\n", fct,
+        err.type, err.code);
+  else
+    printf("TEMPLATE - Error - type=0x%02x code=0x%02x\r\n", err.type, err.code);
 
   do {} while (1);
   /* USER CODE END log */
@@ -173,54 +173,27 @@ static int ai_run(void)
 }
 
 /* USER CODE BEGIN 2 */
-extern q7_t melspec [N_MEL_BIN*N_MELVEC];
-#define TEST_MODEL 0
-
-#if TEST_MODEL
-#include "debug_data.h"
-int current_test_input = 0;
-#endif
-
 int acquire_and_process_data(ai_i8* data[])
 {
-	for (int i=0; i < N_MEL_BIN*N_MELVEC; i++ ){
-#if TEST_MODEL
-		((int8_t **) data)[0][i] = debug_model_input[current_test_input][i];//test_input[i+N_MEL_BIN*j];//
-#else
-		((int8_t **) data)[0][i] = melspec[i];
-#endif
+  /* fill the inputs of the c-model
+  for (int idx=0; idx < AI_BAT_DET_NET_IN_NUM; idx++ )
+  {
+      data[idx] = ....
+  }
 
-	}
-#if TEST_MODEL
-	print_error("DEBUG - predicting number ", current_test_input);
-#endif
-	return 0;
+  */
+  return 0;
 }
 
 int post_process(ai_i8* data[])
 {
-#if TEST_MODEL
-	print_now("DEBUG - prob is ");
-	print_int((int8_t)(data[0][0]));
-	print_now("but should be  ");
-	print_int(debug_correct_prob[current_test_input]);
-	print_now("\r\n");
-	current_test_input = (current_test_input + 1)%7;
-#else
-	//if((int8_t)(data[0][0])>0){
-		print_now("Current prob: ");
-		print_int((int8_t)(data[0][0]));
-		print_now("\r\n");
-	//}
-#endif
+  /* process the predictions
+  for (int idx=0; idx < AI_BAT_DET_NET_OUT_NUM; idx++ )
+  {
+      data[idx] = ....
+  }
 
-	/* process the predictions
-	for (int idx=0; idx < AI_NETWORK_OUT_NUM; idx++ )
-	{
-	  data[idx] = ....
-	}
-
-	*/
+  */
   return 0;
 }
 /* USER CODE END 2 */

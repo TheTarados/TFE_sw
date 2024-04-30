@@ -129,14 +129,15 @@ static void Save_Callback(int buf_cplt) {
 	ADCDataRdy[buf_cplt] = 1;
 
 	//print_error("ADC Callback : buffer\n", buf_cplt);
-
+	//start_cycle_count();
 #if (SAVE_RAW_AUDIO && CHOSEN_OUTPUT == UART)
 	HAL_UART_Transmit(&hlpuart1, (uint8_t *) ADCData[buf_cplt], ADC_BUF_SIZE*S_SIZE, 0xFFFF);
 #else
-	//start_cycle_count();
+
 	batext_SD_write((const void *) ADCData[buf_cplt], ADC_BUF_SIZE*S_SIZE);
-	//stop_cycle_count("SD Write");
+	//
 #endif
+	//stop_cycle_count("Write");
 	//APP_PRINTF("Wrote %d bytes\r\n", ADC_BUF_SIZE*S_SIZE);
 
 	ADCDataRdy[buf_cplt] = 0;
@@ -148,6 +149,23 @@ uint8_t vec_counter = 0;
 q7_t melspec [N_MEL_BIN*N_MELVEC];
 q7_t* melvec[N_MELVEC] = {melspec, melspec + N_MEL_BIN, melspec + 2*N_MEL_BIN, melspec + 3 *N_MEL_BIN, melspec + 4*N_MEL_BIN,
 							melspec+5*N_MEL_BIN, melspec + 6*N_MEL_BIN, melspec + 7*N_MEL_BIN, melspec + 8 *N_MEL_BIN, melspec + 9*N_MEL_BIN,};
+
+static const uint8_t log2_q15(q15_t x){
+	//Return ceiling of log_2 of x
+	static const uint8_t MultiplyDeBruijnBitPosition[32] =
+	{
+	  1, 10, 2, 11, 14, 22, 3, 30, 12, 15, 17, 19, 23, 26, 4, 31,
+	  9, 13, 21, 29, 16, 18, 25, 8, 20, 28, 24, 7, 27, 6, 5, 32
+	};
+	x |= x >> 1; // first round down to one less than a power of 2
+	x |= x >> 2;
+	x |= x >> 4;
+	x |= x >> 8;
+	x |= x >> 16;
+
+	return MultiplyDeBruijnBitPosition[(uint32_t)(x * 0x07C4ACDDU) >> 27];
+}
+
 
 uint8_t separators[16] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
@@ -203,7 +221,7 @@ void print_array_q7(char* intro, q7_t* array, int length){
 	print_now("\r\n\n");
 }
 
-void vec_computation(q15_t* in, q7_t* out) {
+void vec_computation(q15_t* in, q7_t* out, uint8_t shift_val) {
 	q15_t buf     [ SAMPLE_PER_MELVEC ];
 	q15_t fft_buf     [ 2 * SAMPLE_PER_MELVEC ];
 	q63_t temp_vak = 0;
@@ -216,7 +234,7 @@ void vec_computation(q15_t* in, q7_t* out) {
 
 	#pragma GCC unroll 8
 	for(int i = 0 ; i < SAMPLE_PER_MELVEC/2 ;i++){
-		int32_t normalizeds = (__SSUB16(word_in[i], 0x08000800)<<4)&0xFFF0FFF0;
+		int32_t normalizeds = (__SSUB16(word_in[i], 0x08000800)<<shift_val)&0xFFF0FFF0;
 		q31_t facs = word_ham[i];
 		q15_t term1 = (((normalizeds >> 16) *  (facs >> 16)))>>15;
 		q15_t term2 = (((q15_t) normalizeds * (q15_t) facs))>>15;
@@ -236,13 +254,13 @@ void vec_computation(q15_t* in, q7_t* out) {
 
 
 	for(int i = MIN_INDEX_MATMUL ; i < MAX_INDEX_MATMUL; i+=4){
-		q15_t shifted =  word_fft_buf[i]; //add eventual shifts
+		q15_t shifted =  word_fft_buf[i]<<1; //add eventual shifts
 		buf[i  ] = bin_search_log(__SMUAD(shifted, shifted)>>16);
-		shifted =  word_fft_buf[i+1]; //add eventual shifts
+		shifted =  word_fft_buf[i+1]<<1; //add eventual shifts
 		buf[i+1] = bin_search_log(__SMUAD(shifted, shifted)>>16);
-		shifted =  word_fft_buf[i+2]; //add eventual shifts
+		shifted =  word_fft_buf[i+2]<<1; //add eventual shifts
 		buf[i+2] = bin_search_log(__SMUAD(shifted, shifted)>>16);
-		shifted =  word_fft_buf[i+3]; //add eventual shifts
+		shifted =  word_fft_buf[i+3]<<1; //add eventual shifts
 		buf[i+3] = bin_search_log(__SMUAD(shifted, shifted)>>16);
 	}
 
@@ -269,10 +287,13 @@ void treat_spec(q15_t* audio_data){
 #if (SAVE_RAW_AUDIO && CHOSEN_OUTPUT == UART)
 	HAL_UART_Transmit(&hlpuart1, (uint8_t *) audio_data, ADC_BUF_SIZE*S_SIZE, 0xFFFF);
 #endif
-
+	q15_t max_value;
+	uint32_t trash;
+	arm_max_q15( audio_data, ADC_BUF_SIZE, &max_value, &trash);
+	max_value =  16-log2_q15(max_value);
 #pragma GCC unroll 10
 	for (int i = 0 ; i < N_MELVEC ; i++){
-		vec_computation(audio_data+HOP_LENGTH*i, melvec[i]);
+		vec_computation(audio_data+HOP_LENGTH*i, melvec[i],max_value);
 	}
 
 #pragma GCC unroll 64

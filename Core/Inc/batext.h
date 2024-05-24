@@ -12,24 +12,25 @@
 #include "arm_math.h"
 
 #define N_MELVEC 10
-#define N_MEL_BIN 64
+#define N_MEL_BIN 20
 #define SAMPLE_PER_MELVEC	512
-#define HOP_LENGTH	690
+#define HOP_LENGTH	270
 
-#define SAVE_RAW_AUDIO 1
-#define CLASSIFY 0
+#define SAVE_RAW_AUDIO 0
+#define CLASSIFY 1
 
 #define UART 	0
 #define SD_CARD 1
 
-
 #define CHOSEN_OUTPUT SD_CARD
 
 #if SAVE_RAW_AUDIO
-#define ADC_BUF_SIZE	12500
+#define ADC_BUF_SIZE	10000
 #else
-#define ADC_BUF_SIZE	HOP_LENGTH*N_MELVEC
+#define ADC_BUF_SIZE	4000//(HOP_LENGTH*(N_MELVEC-1) + SAMPLE_PER_MELVEC)
 #endif
+
+#define  TEST_MODEL     0
 #define DEBUG_VEC_COMP	0
 #define PRINT_VEC		0
 
@@ -38,7 +39,7 @@ void batext_power_off(void);
 void batext_choose_gain(uint8_t gain);
 int batext_is_card_inserted(void);
 int batext_SD_write(const void *data, uint32_t size);
-void vec_computation(q15_t* in, q7_t* out, uint8_t shift_val);
+void vec_computation(q15_t* in, q7_t* out, uint8_t);
 
 
 

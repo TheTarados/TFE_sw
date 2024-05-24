@@ -58,7 +58,6 @@
 extern DMA_HandleTypeDef hdma_adc;
 extern DMA_HandleTypeDef hdma_lpuart1_tx;
 extern UART_HandleTypeDef hlpuart1;
-extern RTC_HandleTypeDef hrtc;
 extern TIM_HandleTypeDef htim1;
 /* USER CODE BEGIN EV */
 
@@ -203,34 +202,6 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
-  * @brief This function handles RTC Tamper, RTC TimeStamp, LSECSS and RTC SSRU Interrupts.
-  */
-void TAMP_STAMP_LSECSS_SSRU_IRQHandler(void)
-{
-  /* USER CODE BEGIN TAMP_STAMP_LSECSS_SSRU_IRQn 0 */
-
-  /* USER CODE END TAMP_STAMP_LSECSS_SSRU_IRQn 0 */
-  HAL_RTCEx_SSRUIRQHandler(&hrtc);
-  /* USER CODE BEGIN TAMP_STAMP_LSECSS_SSRU_IRQn 1 */
-
-  /* USER CODE END TAMP_STAMP_LSECSS_SSRU_IRQn 1 */
-}
-
-/**
-  * @brief This function handles RTC Wakeup Interrupt.
-  */
-void RTC_WKUP_IRQHandler(void)
-{
-  /* USER CODE BEGIN RTC_WKUP_IRQn 0 */
-
-  /* USER CODE END RTC_WKUP_IRQn 0 */
-  HAL_RTCEx_WakeUpTimerIRQHandler(&hrtc);
-  /* USER CODE BEGIN RTC_WKUP_IRQn 1 */
-
-  /* USER CODE END RTC_WKUP_IRQn 1 */
-}
-
-/**
   * @brief This function handles RCC Interrupt.
   */
 void RCC_IRQHandler(void)
@@ -326,20 +297,6 @@ void LPUART1_IRQHandler(void)
   /* USER CODE BEGIN LPUART1_IRQn 1 */
 
   /* USER CODE END LPUART1_IRQn 1 */
-}
-
-/**
-  * @brief This function handles RTC Alarms (A and B) Interrupt.
-  */
-void RTC_Alarm_IRQHandler(void)
-{
-  /* USER CODE BEGIN RTC_Alarm_IRQn 0 */
-
-  /* USER CODE END RTC_Alarm_IRQn 0 */
-  HAL_RTC_AlarmIRQHandler(&hrtc);
-  /* USER CODE BEGIN RTC_Alarm_IRQn 1 */
-
-  /* USER CODE END RTC_Alarm_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

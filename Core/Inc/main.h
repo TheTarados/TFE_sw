@@ -58,7 +58,11 @@ void stop_cycle_count(char *s);
 void print_array(uint8_t*, int);
 void print_now(const char*);
 void print_int(int);
+void print_time();
 void print_error(const char*, int);
+uint32_t get_time();
+
+
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

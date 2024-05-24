@@ -105,11 +105,11 @@ static ai_buffer* ai_output;
 static void ai_log_err(const ai_error err, const char *fct)
 {
   /* USER CODE BEGIN log */
-  if (fct)
-    printf("TEMPLATE - Error (%s) - type=0x%02x code=0x%02x\r\n", fct,
-        err.type, err.code);
-  else
-    printf("TEMPLATE - Error - type=0x%02x code=0x%02x\r\n", err.type, err.code);
+	print_now("Error in AI: ");
+	if (fct)print_now(fct);
+
+    print_error("\r\ntype=", err.type);
+    print_error("code=", err.code);
 
   do {} while (1);
   /* USER CODE END log */
@@ -173,27 +173,64 @@ static int ai_run(void)
 }
 
 /* USER CODE BEGIN 2 */
+extern q7_t melspec [N_MEL_BIN*N_MELVEC];
+
+
+#if TEST_MODEL
+int8_t test_input[N_MEL_BIN*N_MELVEC] = { -93, -89, -93,-103, -99,-105, -93, -99,-105, -95, -87, -89,-105,-103,
+   -95, -97,-103,-103,-105, -97, -99, -93,-101, -99, -93,-101, -99, -95,
+   -97, -95, -99, -97, -95, -99, -97, -99, -97, -97, -99, -99, -99, -99,
+   -95, -99, -99, -99, -97, -99, -99, -99, -99, -99, -99, -99, -97, -99,
+   -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99,
+   -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99,
+   -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99,
+   -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99,
+   -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99,
+   -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99,
+   -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99,
+   -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99,
+   -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99,
+   -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99, -99,
+   -99, -99, -99, -99};
+#endif
+
 int acquire_and_process_data(ai_i8* data[])
 {
-  /* fill the inputs of the c-model
-  for (int idx=0; idx < AI_BAT_DET_NET_IN_NUM; idx++ )
-  {
-      data[idx] = ....
-  }
+  
+#if TEST_MODEL
+	for (int i=0; i < N_MEL_BIN*N_MELVEC; i++ ){
+		((int8_t **) data)[0][i] = test_input[i];//test_input{i+N_MEL_BIN*j};//
+	}
+#else
+	for (int i=0; i < N_MEL_BIN; i++ ){
+		for (int j=0; j < N_MELVEC; j++ ){
+			((int8_t **) data)[0][j+N_MELVEC*i] = melspec[i+N_MEL_BIN*j];
+		}
+	}
+#endif
 
-  */
+
   return 0;
 }
 
+extern uint32_t registered_times[1536];
+extern uint16_t time_index;
 int post_process(ai_i8* data[])
 {
-  /* process the predictions
-  for (int idx=0; idx < AI_BAT_DET_NET_OUT_NUM; idx++ )
-  {
-      data[idx] = ....
-  }
+  
+	//if((int8_t)(data[0][0])>0){
+	if((uint8_t)(data[0][0])>76 && time_index<10000){
+		//print_now("Think there is a bat right now: ");
+		//print_int((uint8_t)(data[0][0]));
+		//print_now("\r\n");
+		//print_time();
+		registered_times[time_index++]=get_time();
+		print_int(get_time());
 
-  */
+		print_now("    ");
+		print_time();
+		print_now("\r\n");
+	}
   return 0;
 }
 /* USER CODE END 2 */

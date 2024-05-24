@@ -3,7 +3,7 @@
   ******************************************************************************
   * @file    bat_det_net_config.h
   * @author  AST Embedded Analytics Research Platform
-  * @date    Tue Apr 30 10:47:56 2024
+  * @date    Tue May 14 16:11:23 2024
   * @brief   AI Tool Automatic Code Generator for Custom Layers Implementation
   ******************************************************************************
   * @attention

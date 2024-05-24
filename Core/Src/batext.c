@@ -53,7 +53,10 @@ void batext_power_on(void)
 	if(init_sd_power_on())return;
 	HAL_Delay(1000); // more delays between steps may be required at initialisation otherwise it sometimes fails
 #endif
+
+	print_now("Init AFE\r\n");
 	batext_AFE_init();
+	print_now("Setting AFE\r\n");
 	batext_choose_gain(3);
 
 }
@@ -167,39 +170,40 @@ static const uint8_t log2_q15(q15_t x){
 }
 
 
-uint8_t separators[16] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+//uint8_t separators[16] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 static const  q15_t bin_search_log(q15_t x) {
-	if(x<2802){
-	    if(x<283){
-	        if(x<40){
-	            return x*323;
+	if(x<2000){
+	    if(x<290){
+	        if(x<37){
+	            return x*312;
 	        }else{
-	            return x*22+12110;
+	            return x*24+10656;
 	        }
 	    }else{
-	        if(x<1050){
-	            return x*5+16943;
+	        if(x<840){
+	            return x*5+16166;
 	        }else{
-	            return x+20453;
+	            return x*2+18686;
 	        }
 	    }
 	}else{
-	    if(x<11619){
-	        if(x<6105){
-	            return x+23179;
+	    if(x<8200){
+	        if(x<4050){
+	            return x+20686;
 	        }else{
-	            return (x>>1)+25393;
+	            return (x>>1)+22711;
 	        }
 	    }else{
-	        if(x<20147){
-	            return (x>>2)+27256;
+	        if(x<14904){
+	            return (x>>2)+24761;
 	        }else{
-	            return (x>>3)+28966;
+	            return (x>>3)+26624;
 	        }
 	    }
 	}
 }
+
 
 void print_array_q15(char* intro, q15_t* array, int length){
 	print_now(intro);
@@ -222,15 +226,16 @@ void print_array_q7(char* intro, q7_t* array, int length){
 }
 
 void vec_computation(q15_t* in, q7_t* out, uint8_t shift_val) {
+
 	q15_t buf     [ SAMPLE_PER_MELVEC ];
 	q15_t fft_buf     [ 2 * SAMPLE_PER_MELVEC ];
 	q63_t temp_vak = 0;
 
-	
 	uint32_t* word_in 		= (uint32_t*)	in;
 	uint32_t* word_ham 		= (uint32_t*) 	hamming_window;
 	uint32_t* word_buf 		= (uint32_t*) 	buf;
 	uint32_t* word_fft_buf 	= (uint32_t*) 	fft_buf;
+
 
 	#pragma GCC unroll 8
 	for(int i = 0 ; i < SAMPLE_PER_MELVEC/2 ;i++){
@@ -240,6 +245,7 @@ void vec_computation(q15_t* in, q7_t* out, uint8_t shift_val) {
 		q15_t term2 = (((q15_t) normalizeds * (q15_t) facs))>>15;
 		word_buf[i] = __PKHBT(term2 , term1 , 16);
 	}
+
 #if DEBUG_VEC_COMP
 	print_array_q15("after mult", buf, SAMPLE_PER_MELVEC);
 #endif
@@ -254,27 +260,26 @@ void vec_computation(q15_t* in, q7_t* out, uint8_t shift_val) {
 
 
 	for(int i = MIN_INDEX_MATMUL ; i < MAX_INDEX_MATMUL; i+=4){
-		q15_t shifted =  word_fft_buf[i]<<1; //add eventual shifts
+		uint32_t shifted =  (word_fft_buf[i]<<1)&0xFFFEFFFE; //add eventual shifts, beware overflow from imag to real
 		buf[i  ] = bin_search_log(__SMUAD(shifted, shifted)>>16);
-		shifted =  word_fft_buf[i+1]<<1; //add eventual shifts
+		shifted =  (word_fft_buf[i+1]<<1)&0xFFFEFFFE; //add eventual shifts
 		buf[i+1] = bin_search_log(__SMUAD(shifted, shifted)>>16);
-		shifted =  word_fft_buf[i+2]<<1; //add eventual shifts
+		shifted =  (word_fft_buf[i+2]<<1)&0xFFFEFFFE; //add eventual shifts
 		buf[i+2] = bin_search_log(__SMUAD(shifted, shifted)>>16);
-		shifted =  word_fft_buf[i+3]<<1; //add eventual shifts
+		shifted =  (word_fft_buf[i+3]<<1)&0xFFFEFFFE; //add eventual shifts
 		buf[i+3] = bin_search_log(__SMUAD(shifted, shifted)>>16);
 	}
 
 
 #if DEBUG_VEC_COMP
-	print_array_q15("after log", buf, SAMPLE_PER_MELVEC/2);
+	print_array_q15("after log", buf+MIN_INDEX_MATMUL, MAX_INDEX_MATMUL-MIN_INDEX_MATMUL);
 #endif
-	start_cycle_count();
-	#pragma GCC unroll 1
+
+	#pragma GCC unroll 21
 	for(int i = 0 ; i < N_MEL_BIN; i++){
 		arm_dot_prod_q15(buf+s_pos[i],ls[i],l_lens[i], &temp_vak);
-		out[i] = (q7_t)(temp_vak>>(16+7));
+		out[i] = (q7_t)(temp_vak>>26);
 	}
-	stop_cycle_count("Mat mul ");
 #if PRINT_VEC || DEBUG_VEC_COMP
 	print_array_q7("Melvec", out, N_MEL_BIN);
 #endif
@@ -282,41 +287,35 @@ void vec_computation(q15_t* in, q7_t* out, uint8_t shift_val) {
 
 void treat_spec(q15_t* audio_data){
 	//batext_SD_write(melspec, N_MELVEC*N_MEL_BIN*2);
-	//start_cycle_count();
 
-#if (SAVE_RAW_AUDIO && CHOSEN_OUTPUT == UART)
-	HAL_UART_Transmit(&hlpuart1, (uint8_t *) audio_data, ADC_BUF_SIZE*S_SIZE, 0xFFFF);
-#endif
 	q15_t max_value;
 	uint32_t trash;
-	arm_max_q15( audio_data, ADC_BUF_SIZE, &max_value, &trash);
+	arm_max_q15( audio_data, (HOP_LENGTH*(N_MELVEC-1) + SAMPLE_PER_MELVEC), &max_value, &trash);
 	max_value =  16-log2_q15(max_value);
 #pragma GCC unroll 10
 	for (int i = 0 ; i < N_MELVEC ; i++){
 		vec_computation(audio_data+HOP_LENGTH*i, melvec[i],max_value);
 	}
 
-#pragma GCC unroll 64
+#pragma GCC unroll 21
 	for (int i = 0 ; i < N_MEL_BIN ; i++){
 		int16_t mean = 0;
 #pragma GCC unroll 10
 		for (int j = 0 ; j < N_MELVEC ; j++) mean += melvec[j][i];
 		mean /= N_MELVEC;
 #pragma GCC unroll 10
-		for (int j = 0 ; j < N_MELVEC ; j++) melvec[j][i] -= (int8_t)mean;
+		for (int j = 0 ; j < N_MELVEC ; j++)
+			melvec[j][i] = (int8_t)(((int16_t)melvec[j][i]-mean)*2-99);
 	}
+	
 
-	#if (SAVE_RAW_AUDIO && CHOSEN_OUTPUT == UART)
-	//print_array(separators, 16);
-	//print_array((uint8_t*)melspec, N_MEL_BIN*N_MELVEC);
-	//print_array(separators, 16);
-	//stop_cycle_count("Full printing");
-	#endif
 
 #if CLASSIFY
-	//stop_cycle_count("Full computation");
+	start_cycle_count();
 	MX_X_CUBE_AI_Process();
+	stop_cycle_count("Format\r\n");
 #endif
+
 }
 
 static void Vec_Callback(int buf_cplt) {
